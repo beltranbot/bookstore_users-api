@@ -1,8 +1,8 @@
 package users
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/beltranbot/bookstore_users-api/services"
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
@@ -15,7 +15,6 @@ import (
 // CreateUser func
 func CreateUser(c *gin.Context) {
 	var user users.User
-	fmt.Println(user)
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		err := errors.NewBadRequestError("invalid json body")
@@ -23,9 +22,9 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, err := services.CreateUser(user)
-	if err != nil {
-		c.JSON(err.Status, err)
+	result, createErr := services.CreateUser(user)
+	if createErr != nil {
+		c.JSON(createErr.Status, createErr)
 		return
 	}
 
@@ -34,7 +33,19 @@ func CreateUser(c *gin.Context) {
 
 // GetUser func
 func GetUser(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "implement me!")
+	userID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		err := errors.NewBadRequestError("user id should be a number")
+		c.JSON(err.Status, err)
+		return
+	}
+	user, getErr := services.GetUser(userID)
+	if getErr != nil {
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+	c.JSON(http.StatusOK, user)
+
 }
 
 // SearchUser func
