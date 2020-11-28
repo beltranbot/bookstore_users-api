@@ -3,6 +3,8 @@ package users
 import (
 	"fmt"
 
+	"github.com/beltranbot/bookstore_users-api/datasources/mysql/usersdb"
+
 	"github.com/beltranbot/bookstore_users-api/utils/dateutils"
 
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
@@ -14,6 +16,9 @@ var (
 
 // Get func
 func (user *User) Get() *errors.RestErr {
+	if err := usersdb.Client.Ping(); err != nil {
+		panic(err)
+	}
 	result := usersDB[user.ID]
 	if result == nil {
 		return errors.NewNotFoundError(fmt.Sprintf("user %d not found", user.ID))

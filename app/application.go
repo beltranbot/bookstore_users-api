@@ -1,6 +1,9 @@
 package app
 
 import (
+	"fmt"
+
+	"github.com/beltranbot/bookstore_users-api/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,5 +14,5 @@ var (
 // StartApplication func
 func StartApplication() {
 	mapUrls()
-	router.Run(":8080")
+	router.Run(fmt.Sprintf(":%s", config.Config.AppPort))
 }
