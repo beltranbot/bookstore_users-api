@@ -3,6 +3,8 @@ package users
 import (
 	"fmt"
 
+	"github.com/beltranbot/bookstore_users-api/utils/dateutils"
+
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
 )
 
@@ -34,6 +36,9 @@ func (user *User) Save() *errors.RestErr {
 		}
 		return errors.NewBadRequestError(fmt.Sprintf("user %d already exists", current.ID))
 	}
+
+	user.DateCreated = dateutils.GetNowString()
 	usersDB[user.ID] = user
+
 	return nil
 }
