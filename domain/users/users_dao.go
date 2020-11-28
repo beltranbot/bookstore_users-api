@@ -2,12 +2,18 @@ package users
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/beltranbot/bookstore_users-api/datasources/mysql/usersdb"
 
 	"github.com/beltranbot/bookstore_users-api/utils/dateutils"
 
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
+)
+
+const (
+	indexUniqueEmail = "email_unique"
+	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?)"
 )
 
 var (
@@ -34,16 +40,36 @@ func (user *User) Get() *errors.RestErr {
 
 // Save func
 func (user *User) Save() *errors.RestErr {
-	current := usersDB[user.ID]
-	if current != nil {
-		if current.Email == user.Email {
-			return errors.NewBadRequestError(fmt.Sprintf("email %s already registered", current.Email))
-		}
-		return errors.NewBadRequestError(fmt.Sprintf("user %d already exists", current.ID))
+	statement, err := usersdb.Client.Prepare(queryInsertUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
 	}
+	defer statement.Close()
 
 	user.DateCreated = dateutils.GetNowString()
-	usersDB[user.ID] = user
+
+	insertResult, err := statement.Exec(
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		user.DateCreated,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), indexUniqueEmail) {
+			return errors.NewBadRequestError(fmt.Sprintf("email %s already exists", user.Email))
+		}
+		return errors.NewInternalServerError(
+			fmt.Sprintf("error when trying to save user: %s", err.Error()),
+		)
+	}
+	userID, err := insertResult.LastInsertId()
+	if err != nil {
+		return errors.NewInternalServerError(
+			fmt.Sprintf("error when trying to save user: %s", err.Error()),
+		)
+	}
+
+	user.ID = userID
 
 	return nil
 }
