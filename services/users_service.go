@@ -7,8 +7,23 @@ import (
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
 )
 
+var (
+	// UsersService instance
+	UsersService usersServiceInterface = &usersService{}
+)
+
+type usersService struct{}
+
+type usersServiceInterface interface {
+	Get(int64) (*users.User, *errors.RestErr)
+	Create(users.User) (*users.User, *errors.RestErr)
+	Update(bool, users.User) (*users.User, *errors.RestErr)
+	Delete(int64) *errors.RestErr
+	Search(string) (users.Users, *errors.RestErr)
+}
+
 // Get func
-func Get(userID int64) (*users.User, *errors.RestErr) {
+func (s *usersService) Get(userID int64) (*users.User, *errors.RestErr) {
 	result := &users.User{ID: userID}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -17,7 +32,7 @@ func Get(userID int64) (*users.User, *errors.RestErr) {
 }
 
 // Create func
-func Create(user users.User) (*users.User, *errors.RestErr) {
+func (s *usersService) Create(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -32,8 +47,8 @@ func Create(user users.User) (*users.User, *errors.RestErr) {
 }
 
 // Update func
-func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
-	current, err := Get(user.ID)
+func (s *usersService) Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
+	current, err := s.Get(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +77,13 @@ func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
 }
 
 // Delete func
-func Delete(userID int64) *errors.RestErr {
+func (s *usersService) Delete(userID int64) *errors.RestErr {
 	user := &users.User{ID: userID}
 	return user.Delete()
 }
 
 // Search func
-func Search(status string) (users.Users, *errors.RestErr) {
+func (s *usersService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
