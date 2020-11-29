@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/beltranbot/bookstore_users-api/domain/users"
+	"github.com/beltranbot/bookstore_users-api/utils/cryptoutils"
 	"github.com/beltranbot/bookstore_users-api/utils/dateutils"
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
 )
@@ -21,8 +22,9 @@ func Create(user users.User) (*users.User, *errors.RestErr) {
 		return nil, err
 	}
 
-	user.DateCreated = dateutils.GetNowDBFormat()
 	user.Status = users.StatusActive
+	user.DateCreated = dateutils.GetNowDBFormat()
+	user.Password = cryptoutils.GetMD5(user.Password)
 	if saveErr := user.Save(); saveErr != nil {
 		return nil, saveErr
 	}
