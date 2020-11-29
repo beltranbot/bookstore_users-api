@@ -28,7 +28,7 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusCreated, result.Marshall(c.GetHeader("X-Public") == "true"))
 }
 
 // Get func
@@ -38,13 +38,14 @@ func Get(c *gin.Context) {
 		c.JSON(userErr.Status, userErr)
 		return
 	}
+
 	user, getErr := services.Get(userID)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
-	c.JSON(http.StatusOK, user)
 
+	c.JSON(http.StatusOK, user.Marshall(c.GetHeader("X-Public") == "true"))
 }
 
 // Update func
@@ -72,7 +73,7 @@ func Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, result.Marshall(c.GetHeader("X-Public") == "true"))
 }
 
 // Delete func
@@ -99,7 +100,7 @@ func Search(c *gin.Context) {
 		c.JSON(findErr.Status, findErr)
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	c.JSON(http.StatusOK, users.Marshall(c.GetHeader("X-Public") == "true"))
 }
 
 func getUserID(userIDParam string) (int64, *errors.RestErr) {
