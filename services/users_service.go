@@ -5,8 +5,8 @@ import (
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
 )
 
-// GetUser func
-func GetUser(userID int64) (*users.User, *errors.RestErr) {
+// Get func
+func Get(userID int64) (*users.User, *errors.RestErr) {
 	result := &users.User{ID: userID}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -14,8 +14,8 @@ func GetUser(userID int64) (*users.User, *errors.RestErr) {
 	return result, nil
 }
 
-// CreateUser func
-func CreateUser(user users.User) (*users.User, *errors.RestErr) {
+// Create func
+func Create(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -25,9 +25,9 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	return &user, nil
 }
 
-// UpdateUser func
-func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
-	current, err := GetUser(user.ID)
+// Update func
+func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
+	current, err := Get(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,4 +53,10 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) 
 	}
 
 	return current, nil
+}
+
+// Delete func
+func Delete(userID int64) *errors.RestErr {
+	user := &users.User{ID: userID}
+	return user.Delete()
 }

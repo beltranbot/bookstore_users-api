@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateUser func
-func CreateUser(c *gin.Context) {
+// Create func
+func Create(c *gin.Context) {
 	var user users.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -22,7 +22,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, createErr := services.CreateUser(user)
+	result, createErr := services.Create(user)
 	if createErr != nil {
 		c.JSON(createErr.Status, createErr)
 		return
@@ -31,15 +31,14 @@ func CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
-// GetUser func
-func GetUser(c *gin.Context) {
-	userID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if err != nil {
-		err := errors.NewBadRequestError("user id should be a number")
-		c.JSON(err.Status, err)
+// Get func
+func Get(c *gin.Context) {
+	userID, userErr := getUserID(c.Param("user_id"))
+	if userErr != nil {
+		c.JSON(userErr.Status, userErr)
 		return
 	}
-	user, getErr := services.GetUser(userID)
+	user, getErr := services.Get(userID)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
@@ -48,12 +47,11 @@ func GetUser(c *gin.Context) {
 
 }
 
-// UpdateUser func
-func UpdateUser(c *gin.Context) {
-	userID, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+// Update func
+func Update(c *gin.Context) {
+	userID, userErr := getUserID(c.Param("user_id"))
 	if userErr != nil {
-		err := errors.NewBadRequestError("user id should be a number")
-		c.JSON(err.Status, err)
+		c.JSON(userErr.Status, userErr)
 		return
 	}
 
@@ -68,11 +66,35 @@ func UpdateUser(c *gin.Context) {
 
 	isPartial := c.Request.Method == http.MethodPatch
 
-	result, updateErr := services.UpdateUser(isPartial, user)
+	result, updateErr := services.Update(isPartial, user)
 	if updateErr != nil {
 		c.JSON(updateErr.Status, updateErr)
 		return
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+// Delete func
+func Delete(c *gin.Context) {
+	userID, userErr := getUserID(c.Param("user_id"))
+	if userErr != nil {
+		c.JSON(userErr.Status, userErr)
+		return
+	}
+
+	if deleteErr := services.Delete(userID); deleteErr != nil {
+		c.JSON(deleteErr.Status, deleteErr)
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+func getUserID(userIDParam string) (int64, *errors.RestErr) {
+	userID, userErr := strconv.ParseInt(userIDParam, 10, 64)
+	if userErr != nil {
+		return 0, errors.NewBadRequestError("user id should be a number")
+	}
+	return userID, nil
 }
