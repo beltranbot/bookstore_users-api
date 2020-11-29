@@ -10,10 +10,9 @@ import (
 )
 
 const (
-	indexUniqueEmail = "email_unique"
-	errorNoRows      = "no rows in result set"
-	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
-	queryGetUser     = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id = ?;"
+	queryInsertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
+	queryGetUser    = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id = ?;"
+	queryUpdateUser = "UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?;"
 )
 
 var (
@@ -60,5 +59,20 @@ func (user *User) Save() *errors.RestErr {
 
 	user.ID = userID
 
+	return nil
+}
+
+// Update func
+func (user *User) Update() *errors.RestErr {
+	statement, err := usersdb.Client.Prepare(queryUpdateUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer statement.Close()
+
+	_, err = statement.Exec(user.FirstName, user.LastName, user.Email, user.ID)
+	if err != nil {
+		return mysqlutils.ParseError(err)
+	}
 	return nil
 }
