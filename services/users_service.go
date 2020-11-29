@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/beltranbot/bookstore_users-api/domain/users"
+	"github.com/beltranbot/bookstore_users-api/utils/dateutils"
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
 )
 
@@ -19,6 +20,9 @@ func Create(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
+
+	user.DateCreated = dateutils.GetNowDBFormat()
+	user.Status = users.StatusActive
 	if saveErr := user.Save(); saveErr != nil {
 		return nil, saveErr
 	}
@@ -59,4 +63,10 @@ func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
 func Delete(userID int64) *errors.RestErr {
 	user := &users.User{ID: userID}
 	return user.Delete()
+}
+
+// Search func
+func Search(status string) ([]users.User, *errors.RestErr) {
+	dao := &users.User{}
+	return dao.FindByStatus(status)
 }
