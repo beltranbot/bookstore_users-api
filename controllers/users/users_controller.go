@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/beltranbot/bookstore_users-api/domain/users"
 	"github.com/beltranbot/bookstore_users-api/services"
 	"github.com/beltranbot/bookstore_users-api/utils/errors"
 
-	"github.com/beltranbot/bookstore_users-api/domain/users"
+	"github.com/beltranbot/bookstore_oauth-go/oauth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +34,20 @@ func Create(c *gin.Context) {
 
 // Get func
 func Get(c *gin.Context) {
+	if getErr := oauth.AuthenticateRequest(c.Request); getErr != nil { // using the custom oauth library
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+
+	if callerID := oauth.GetCallerID(c.Request); callerID == 0 {
+		err := errors.RestErr{
+			Status:  http.StatusUnauthorized,
+			Message: "resource not avaiable",
+		}
+		c.JSON(err.Status, err)
+		return
+	}
+
 	userID, userErr := getUserID(c.Param("user_id"))
 	if userErr != nil {
 		c.JSON(userErr.Status, userErr)
@@ -45,7 +60,12 @@ func Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user.Marshall(c.GetHeader("X-Public") == "true"))
+	if oauth.GetCallerID(c.Request) == user.ID {
+		c.JSON(http.StatusOK, user.Marshall(false))
+		return
+	}
+
+	c.JSON(http.StatusOK, user.Marshall(oauth.IsPublic(c.Request)))
 }
 
 // Update func
