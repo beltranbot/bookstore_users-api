@@ -3,7 +3,7 @@ package users
 import (
 	"strings"
 
-	"github.com/beltranbot/bookstore_users-api/utils/errors"
+	errors "github.com/beltranbot/bookstore_utils-go/resterrors"
 )
 
 const (
